@@ -3,8 +3,7 @@ layout: post
 title: Yii gii 分析数据库表结构字段类型问题
 ---
 
-{{ page.title }}
-================
+h1. {{ page.title }}
 
 <p class="meta">1 Mar 2014 - Beijing</p>
 
