@@ -26,3 +26,12 @@ protected function extractType($dbType)
 	$this->type='string';
 }
 {% endhighlight %}
+
+代码写的很清楚了，至于为什么要这么做？
+qiang.xue
+This is expected because unsigned int may lose precision if represented as PHP int.
+
+查看官网文档有这一段话
+The size of an integer is platform-dependent, although a maximum value of about two billion is the usual value (that's 32 bits signed). 64-bit platforms usually have a maximum value of about 9E18. PHP does not support unsigned integers. Integer size can be determined using the constant PHP_INT_SIZE, and maximum value using the constant PHP_INT_MAX since PHP 4.4.0 and PHP 5.0.5.
+所以如果是32-bit platforms 把mysql里面的unsigned int 解析成int的话如果数据库里面该值大于2147483647，就会出现问题。
+所以并不是Yii做不到而是考虑周全了而已，在公司的生产测试平台几乎都是64-bit linux 所以该问题在此范围内可以被忽略，可以手动修改为int型号。
