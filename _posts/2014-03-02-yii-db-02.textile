@@ -45,20 +45,10 @@ buildQuery()
 execute()
 queryInternal()
 {% endhighlight %}
-
 其中$_statement是PDOStatement的实例，$_text则是sql语句字符串,$_query是分类存放sql片段的的数组例如
 <code>$this->_query['select'] = '*';</code>
 $params则显然是绑定的参数了。
-通过getText() 可以看出(代码如下)
-{% highlight php %}
-public function getText()
-{
-	if($this->_text=='' && !empty($this->_query))
-		$this->setText($this->buildQuery($this->_query));
-	return $this->_text;
-}
-{% endhighlight %}
-优先选择$_text返回，没有的时候才会对$_query buildQuery()
+通过getText() 可以看出，优先选择$_text返回，没有的时候才会对$_query buildQuery()
 
 值得详细讲解的自然是查询必经之路：queryInternal()
 其中有对在CDbConnection 缓存配置项的实现，比较有意思的是缓存的控制维度，因为开启了这个以后对所有的通过Yii::app()->db 组件连接数据库的查询的都生效，所以缓存不仅有过期时间，还有数量控制，即一个http请求周期只对前n条sql做缓存。不知道这种组合的配置缓存效果如果，默认情况是用文件系统来做缓存，有机会可以改到memcache试一试。
