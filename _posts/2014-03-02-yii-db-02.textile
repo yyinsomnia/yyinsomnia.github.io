@@ -1,0 +1,70 @@
+---
+layout: post
+title: Yii db分析之CDbCommand
+---
+
+h1. {{ page.title }}
+
+<p class="meta">2 Mar 2014 - Beijing</p>
+
+Yii的db component用到最多的2个功能就是commoand和ar，官方的建议是普通的crud使用ar而复杂的sql查询使用command。我们从简单到复杂，而yii把sql语句都封装在了command中统一控制，这样CDbCommand类成为了一个db访问的基础，先分析CDbCommand。
+应用使用入口在CDbConnection中
+{% highlight php %}
+public function createCommand($query=null)
+{
+	$this->setActive(true);
+	return new CDbCommand($this,$query);
+}
+{% endhighlight %}
+进入CDbCommand类查看构造方法
+{% highlight php %}
+public function __construct(CDbConnection $connection,$query=null)
+{
+	$this->_connection=$connection;
+	if(is_array($query))
+	{
+		foreach($query as $name=>$value)
+			$this->$name=$value;
+	}
+	else
+		$this->setText($query);
+}
+{% endhighlight %}
+可以惊奇的发现原来$query 不仅可以传sql字符串还能传数组，例如:array('select'=>'*', 'from'=>'tbl_user'),更多的数组key可以看看CDbCommand里面set开头的方法。
+
+CDbConnection是对PDO的轻度封装，而CDbCommand则是对PDOStatement 和 sql语句的轻度封装。因为涉及到对常用sql的功能封装，所以该类代码达到了1600多行。逐一讲解意义不大，所以着重分析一些属性 and 
+{% highlight php %}
+$params
+$_text
+$_query
+$_statement
+setText()
+getText()
+prepare()
+buildQuery()
+execute()
+queryInternal()
+{% endhighlight %}
+
+
+其中$_statement是PDOStatement的实例，$_text则是sql语句字符串,$_query是分类存放sql片段的的数组例如
+<code>$this->_query['select'] = '*';</code>
+$params则显然是绑定的参数了。
+通过getText() 可以看出(代码如下)
+{% highlight php %}
+public function getText()
+{
+	if($this->_text=='' && !empty($this->_query))
+		$this->setText($this->buildQuery($this->_query));
+	return $this->_text;
+}
+{% endhighlight %}
+优先选择$_text返回，没有的时候才会对$_query buildQuery()
+
+值得详细讲解的自然是查询必经之路：queryInternal()
+其中有对在CDbConnection 缓存配置项的实现，比较有意思的是缓存的控制维度，因为开启了这个以后对所有的通过Yii::app()->db 组件连接数据库的查询的都生效，所以缓存不仅有过期时间，还有数量控制，即一个http请求周期只对前n条sql做缓存。不知道这种组合的配置缓存效果如果，默认情况是用文件系统来做缓存，有机会可以改到memcache试一试。
+
+
+
+
+
