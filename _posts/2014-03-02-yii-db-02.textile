@@ -46,7 +46,6 @@ execute()
 queryInternal()
 {% endhighlight %}
 
-
 其中$_statement是PDOStatement的实例，$_text则是sql语句字符串,$_query是分类存放sql片段的的数组例如
 <code>$this->_query['select'] = '*';</code>
 $params则显然是绑定的参数了。
